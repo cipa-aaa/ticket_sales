@@ -25,6 +25,11 @@ const userController = require(`../controllers/user.controller`)
 /** create route to get data with method "GET" */
 app.get("/", [midOne], authorize, IsAdmin, userController.getAllUser)
 
+/** create route for user to see their own profile
+ * this route must be placed BEFORE "/:key" route,
+ * otherwise Express will treat "profile" as the ":key" parameter */
+app.get("/profile", authorize, userController.getProfile)
+
 /** create route to find user
  * using method "GET" and define parameter "key" for keyword */
 app.get("/:key", authorize, IsAdmin, userController.findUser)

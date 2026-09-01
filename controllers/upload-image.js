@@ -19,9 +19,15 @@ const upload = multer({
   storage: storage,
   /** filter uploaded file */
   fileFilter: (req, file, cb) => {
-    /** filter type of file */
+    /** filter type of file berdasarkan extension DAN mimetype */
+    const acceptedExt = /\.(jpg|jpeg|png)$/i
     const acceptedType = [`image/jpg`, `image/jpeg`, `image/png`]
-    if (!acceptedType.includes(file.mimetype)) {
+
+    const extValid = acceptedExt.test(path.extname(file.originalname))
+    const mimeValid = acceptedType.includes(file.mimetype)
+
+    /** terima file jika ekstensi ATAU mimetype-nya valid */
+    if (!extValid && !mimeValid) {
       cb(null, false) /** refuse upload */
       return cb(`Invalid file type (${file.mimetype})`)
     }

@@ -1,6 +1,10 @@
 /** load model for `events` table */
 const eventModel = require(`../models/index`).event
 
+/** load ticket model and sequelize instance (needed for aggregation) */
+const ticketModel = require(`../models/index`).ticket
+const sequelize = require(`../models/index`).sequelize
+
 /** load Operation from Sequelize */
 const Op = require(`sequelize`).Op
 
@@ -146,4 +150,33 @@ exports.deleteEvent = async (request, response) => {
     .catch(error => {
       return response.status(500).json({ success: false, message: error.message })
     })
+}
+
+/** create function to get best selling events based on total tickets sold */
+exports.getBestSellingEvents = async (request, response) => {
+  try {
+    let events = await eventModel.findAll({
+      attributes: {
+        include: [
+          [sequelize.fn(`COUNT`, sequelize.col(`eventTicket.ticketID`)), `totalSold`]
+        ]
+      },
+      include: [{
+        model: ticketModel,
+        as: `eventTicket`,
+        attributes: []
+      }],
+      group: [`event.eventID`],
+      order: [[sequelize.literal(`totalSold`), `DESC`]],
+      subQuery: false
+    })
+
+    return response.json({
+      success: true,
+      data: events,
+      message: `Best selling events have been loaded`
+    })
+  } catch (error) {
+    return response.status(500).json({ success: false, message: error.message })
+  }
 }

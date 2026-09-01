@@ -7,11 +7,19 @@ const app = express()
 /** allow to read 'request' with json type */
 app.use(express.json())
 
+/** load function from auth-controller */
+const { authorize } = require('../controllers/auth.controller')
+
 /** load event's controller */
 const eventController = require(`../controllers/event.controller`)
 
 /** create route to get data with method "GET" */
 app.get("/", eventController.getAllEvent)
+
+/** create route to get best selling events based on total tickets sold
+ * this route must be placed BEFORE "/:key" route,
+ * otherwise Express will treat "best-selling" as the ":key" parameter */
+app.get("/best-selling", authorize, eventController.getBestSellingEvents)
 
 /** create route to find event
  * using method "GET" and define parameter key for "keyword" */

@@ -145,3 +145,24 @@ exports.deleteUser = (request, response) => {
             })
         })
     }
+/** create function for user to see their own profile */
+exports.getProfile = async (request, response) => {
+    /** get userID from decoded token (already set by authorize middleware) */
+    let userID = request.user.userID
+
+    /** find data only for the logged-in user, based on token's userID */
+    let user = await userModel.findOne({ where: { userID: userID } })
+
+    if (!user) {
+        return response.status(404).json({
+            success: false,
+            message: `User not found`
+        })
+    }
+
+    return response.json({
+        success: true,
+        data: user,
+        message: `Your profile has been loaded`
+    })
+}
