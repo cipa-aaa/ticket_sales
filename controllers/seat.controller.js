@@ -38,6 +38,26 @@ exports.getSeatByEvent = async (req, res) => {
   }
 };
 
+// GET /seat/available/:eventID -> hanya kursi yang masih kosong (belum terisi) untuk satu event
+exports.getAvailableSeats = async (req, res) => {
+  try {
+    const eventID = req.params.eventID
+    const data = await seat.findAll({
+      where: {
+        eventID: eventID,
+        status: false /** false = kursi masih kosong/belum terisi */
+      }
+    });
+    res.status(200).json({
+      success: true,
+      data: data,
+      message: `Available seats for event ${eventID} have been loaded`
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.createSeat = async (req, res) => {
   try {
     const { eventID, rowNum, seatNum, status } = req.body;

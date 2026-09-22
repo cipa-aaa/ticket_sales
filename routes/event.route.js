@@ -10,6 +10,9 @@ app.use(express.json())
 /** load function from auth-controller */
 const { authorize } = require('../controllers/auth.controller')
 
+/** load function from role-validation, needed for admin-only revenue routes */
+const { IsAdmin } = require('../middlewares/role-validation')
+
 /** load event's controller */
 const eventController = require(`../controllers/event.controller`)
 
@@ -20,6 +23,14 @@ app.get("/", eventController.getAllEvent)
  * this route must be placed BEFORE "/:key" route,
  * otherwise Express will treat "best-selling" as the ":key" parameter */
 app.get("/best-selling", authorize, eventController.getBestSellingEvents)
+
+/** create route to get revenue report for ALL events (admin only)
+ * must be placed BEFORE "/:key" route */
+app.get("/revenue", authorize, IsAdmin, eventController.getAllEventsRevenue)
+
+/** create route to get revenue report for one specific event (admin only)
+ * must be placed BEFORE "/:key" route */
+app.get("/:id/revenue", authorize, IsAdmin, eventController.getEventRevenue)
 
 /** create route to find event
  * using method "GET" and define parameter key for "keyword" */

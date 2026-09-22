@@ -180,3 +180,71 @@ exports.getBestSellingEvents = async (request, response) => {
     return response.status(500).json({ success: false, message: error.message })
   }
 }
+
+/** create function to get revenue report for a specific event (admin only) */
+exports.getEventRevenue = async (request, response) => {
+  try {
+    let eventID = request.params.id
+
+    let eventData = await eventModel.findOne({ where: { eventID: eventID } })
+
+    if (!eventData) {
+      return response.status(404).json({
+        success: false,
+        message: `Event dengan ID ${eventID} tidak ditemukan`
+      })
+    }
+
+    /** count how many tickets have been sold for this event */
+    let totalTicketSold = await ticketModel.count({ where: { eventID: eventID } })
+
+    /** calculate total revenue: ticket price x number of tickets sold */
+    let totalRevenue = eventData.price * totalTicketSold
+
+    return response.json({
+      success: true,
+      data: {
+        eventID: eventData.eventID,
+        eventName: eventData.eventName,
+        eventDate: eventData.eventDate,
+        venue: eventData.venue,
+        price: eventData.price,
+        totalTicketSold: totalTicketSold,
+        totalRevenue: totalRevenue
+      },
+      message: `Revenue report for event ${eventData.eventName} has been loaded`
+    })
+  } catch (error) {
+    return response.status(500).json({ success: false, message: error.message })
+  }
+}
+
+/** create function to get revenue report for ALL events at once (admin only) */
+exports.getAllEventsRevenue = async (request, response) => {
+  try {
+    let events = await eventModel.findAll({
+      attributes: {
+        include: [
+          [sequelize.fn(`COUNT`, sequelize.col(`eventTicket.ticketID`)), `totalTicketSold`],
+          [sequelize.literal(`price * COUNT(\`eventTicket\`.\`ticketID\`)`), `totalRevenue`]
+        ]
+      },
+      include: [{
+        model: ticketModel,
+        as: `eventTicket`,
+        attributes: []
+      }],
+      group: [`event.eventID`],
+      order: [[sequelize.literal(`totalRevenue`), `DESC`]],
+      subQuery: false
+    })
+
+    return response.json({
+      success: true,
+      data: events,
+      message: `Revenue report for all events have been loaded`
+    })
+  } catch (error) {
+    return response.status(500).json({ success: false, message: error.message })
+  }
+}

@@ -12,7 +12,7 @@ module.exports = {
         email: "albus@gmail.com",
         password: md5("12345"),
         role : "admin",
-        createdAt : now,
+        createdAt : now, 
         updatedAt : now
       },
       {
